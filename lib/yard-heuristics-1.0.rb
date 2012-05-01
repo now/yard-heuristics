@@ -25,4 +25,7 @@ YARD::DocstringParser.after_parse do |parser|
       returns.first.types = %w'Boolean'
     end
   end
+  returns.reject{ |e| e.types }.each do |e|
+    e.types = [$1] if /\A(?:(?:An?|The)\s+)?+.*?([[:upper:]][^[:space:]]*)/ =~ e.text
+  end
 end
