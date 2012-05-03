@@ -4,30 +4,98 @@
 module YARDHeuristics
   load File.expand_path('../yard-heuristics/version.rb', __FILE__)
   Version.load
+
+  ParamTypes = {
+    'index' => %w'Integer',
+    'object' => %w'Object',
+    'range' => %w'Range',
+    'string' => %w'String'
+  }
+
+  ReturnTypes = {
+    :<< => :self_or_type,
+    :>> => :self_or_type,
+    :== => %w'Boolean',
+    :=== => %w'Boolean',
+    :=~ => %w'Boolean',
+    :<=> => %w'Integer nil',
+    :+ => :type,
+    :- => :type,
+    :* => :type,
+    :/ => :type,
+    :each => %w'self',
+    :each_with_index => %w'self',
+    :inspect => %w'String',
+    :length => %w'Integer',
+    :size => %w'Integer',
+    :to_s => %w'String',
+    :to_str => %w'String'
+  }
+
+  class << self
+    def set_or_add_param_tag(overload, name, types)
+      base = name.sub(/\A[&*]/, '')
+      if tag = overload.tags.find{ |e| e.tag_name == 'param' and e.name == base }
+        tag.types = types unless tag.types
+      else
+        tag = YARD::Tags::Tag.new(:param, '', types, base)
+        if overload.respond_to? :docstring
+          overload.docstring.add_tag tag
+        else
+          overload.tags << tag
+        end
+      end
+      self
+    end
+  end
 end
 
 YARD::DocstringParser.after_parse do |parser|
   next unless YARD::CodeObjects::MethodObject === parser.object
+  next if parser.text.empty? and parser.tags.empty?
+  name = parser.object.namespace ?
+    (parser.object.namespace.namespace ?
+     parser.object.namespace.relative_path(parser.object.namespace) :
+     parser.object.namespace.name) :
+    parser.object.name
   if parser.object.parameters.assoc('other') and
       not parser.tags.select{ |e| e.tag_name == 'param' }.
         find{ |e| YARD::Tags::RefTagList === e or e.name == 'other' }
     parser.tags <<
-      YARD::Tags::Tag.new(:param,
-                          '',
-                          parser.object.namespace.namespace ?
-                            parser.object.namespace.relative_path(parser.object.namespace) :
-                            parser.object.namespace,
-                          'other')
+      YARD::Tags::Tag.new(:param, '', name, 'other')
   end
-  returns = parser.tags.select{ |e| e.tag_name == 'return' }
-  if [:===, :==, :=~].include? parser.object.name and returns.size < 2
-    if returns.empty?
-      parser.tags << YARD::Tags::Tag.new(:return, '', %w'Boolean')
-    elsif not returns.first.types
-      returns.first.types = %w'Boolean'
+  ([parser] + parser.tags.select{ |e| YARD::Tags::OverloadTag === e }).each do |overload|
+    parameters = (YARD::Tags::OverloadTag === overload and overload.parameters) ||
+      parser.object.parameters
+    parameters.each do |name, _|
+      types = YARDHeuristics::ParamTypes[name] and
+        YARDHeuristics.set_or_add_param_tag(overload, name, types)
     end
-  end
-  returns.select{ |e| YARD::Tags::Tag === e }.reject{ |e| e.types }.each do |e|
-    e.types = [$1] if /\A(?:(?:An?|The)\s+)?+.*?([[:upper:]][^[:space:]]*)/ =~ e.text
+    YARDHeuristics.set_or_add_param_tag(overload, parameters.last.first, %w'Proc') if
+      parameters.last and parameters.last.first =~ /\A&/
+
+    returns = overload.tags.select{ |e| e.tag_name == 'return' }
+    types = YARDHeuristics::ReturnTypes[(YARD::Tags::OverloadTag === overload and
+                                         overload.name) || parser.object.name]
+    case types
+    when :self_or_type
+      types = parser.tags.select{ |e| e.tag_name == 'param' }.find{ |e| e.name == 'other' } ?
+        [name] :
+        %w'self'
+    when :type
+      types = [name]
+    end
+    if types and returns.size < 2
+      if returns.size == 0
+        tag = YARD::Tags::Tag.new(:return, '', types)
+        if overload.respond_to? :docstring
+          overload.docstring.add_tag tag
+        else
+          overload.tags << tag
+        end
+      elsif not returns.first.types
+        returns.first.types = types
+      end
+    end
   end
 end
