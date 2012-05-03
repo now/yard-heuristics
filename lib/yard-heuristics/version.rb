@@ -3,7 +3,7 @@
 require 'inventory-1.0'
 
 module YARDHeuristics
-  Version = Inventory.new(1, 0, 0){
+  Version = Inventory.new(1, 0, 1){
     def dependencies
       super + Inventory::Dependencies.new{
         development 'inventory-rake', 1, 3, 0

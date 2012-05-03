@@ -8,7 +8,9 @@ end
 
 YARD::DocstringParser.after_parse do |parser|
   next unless YARD::CodeObjects::MethodObject === parser.object
-  if parser.object.parameters.assoc('other') and not parser.tags.select{ |e| e.tag_name == 'param' }.find{ |e| e.name == 'other' }
+  if parser.object.parameters.assoc('other') and
+      not parser.tags.select{ |e| e.tag_name == 'param' }.
+        find{ |e| YARD::Tags::RefTagList === e or e.name == 'other' }
     parser.tags <<
       YARD::Tags::Tag.new(:param,
                           '',
@@ -25,7 +27,7 @@ YARD::DocstringParser.after_parse do |parser|
       returns.first.types = %w'Boolean'
     end
   end
-  returns.reject{ |e| e.types }.each do |e|
+  returns.select{ |e| YARD::Tags::Tag === e }.reject{ |e| e.types }.each do |e|
     e.types = [$1] if /\A(?:(?:An?|The)\s+)?+.*?([[:upper:]][^[:space:]]*)/ =~ e.text
   end
 end
