@@ -25,6 +25,7 @@ module YARDHeuristics
     :/ => :type,
     :each => %w'self',
     :each_with_index => %w'self',
+    :hash => %w'Integer',
     :inspect => %w'String',
     :length => %w'Integer',
     :size => %w'Integer',
@@ -53,6 +54,7 @@ end
 YARD::DocstringParser.after_parse do |parser|
   next unless YARD::CodeObjects::MethodObject === parser.object
   next if parser.text.empty? and parser.tags.empty?
+  next if parser.raw_text =~ /\A\(see.*\)\z/
   name = parser.object.namespace ?
     (parser.object.namespace.namespace ?
      parser.object.namespace.relative_path(parser.object.namespace) :
@@ -97,5 +99,24 @@ YARD::DocstringParser.after_parse do |parser|
         returns.first.types = types
       end
     end
+  end
+end
+
+module YARD::Templates::Helpers::HtmlHelper
+  alias yardheuristics_saved_htmlify htmlify
+  def htmlify(text, markup = options.markup)
+    yardheuristics_saved_htmlify(text, markup).gsub(/\b([[:upper:]]+)(th)?\b/){
+      if $`.end_with?('$') or not YARD::CodeObjects::MethodObject === object
+        $&
+      else
+        parameter = $1.downcase
+        ((object.parameters.assoc(parameter) ||
+          object.parameters.assoc('*' + parameter) ||
+          object.parameters.assoc('&' + parameter) ||
+          object.tags.find{ |e| e.tag_name == 'yieldparam' and e.name == parameter }) ?
+         '<em class="parameter">%s</em>' % parameter :
+         $1) + $2.to_s
+      end
+    }
   end
 end

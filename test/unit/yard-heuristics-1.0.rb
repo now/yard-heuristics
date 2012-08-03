@@ -107,4 +107,114 @@ end
 EOS
     YARD::Registry.at('#a').docstring.tags(:param).last.types
   end
+
+  expect [%w'self'] do
+    YARD::Registry.clear
+    YARD::Parser::SourceParser.parse_string(<<EOS)
+# @return [self]
+def b(&block)
+end
+# (see #b)
+def <<(&block)
+end
+EOS
+  YARD::Registry.at('#<<').docstring.tags(:return).map{ |e| e.types }
+  end
+
+  expect 'Emphasizes <em class="parameter">parameter</em>.' do
+    YARD::Registry.clear
+    YARD::Parser::SourceParser.parse_string(<<EOS)
+# Emphasizes PARAMETER.
+def a(parameter)
+end
+EOS
+    Module.new{
+      class << self
+        include YARD::Templates::Helpers::HtmlHelper
+        def options
+          YARD::Templates::TemplateOptions.new{ |o|
+            o.reset_defaults
+          }
+        end
+        def object
+          YARD::Registry.at('#a')
+        end
+      end
+    }.instance_eval{
+      htmlify(YARD::Registry.at('#a').docstring)
+    }
+  end
+
+  expect 'The <em class="parameter">index</em>th element.' do
+    YARD::Registry.clear
+    YARD::Parser::SourceParser.parse_string(<<EOS)
+# The INDEXth element.
+def a(index)
+end
+EOS
+    Module.new{
+      class << self
+        include YARD::Templates::Helpers::HtmlHelper
+        def options
+          YARD::Templates::TemplateOptions.new{ |o|
+            o.reset_defaults
+          }
+        end
+        def object
+          YARD::Registry.at('#a')
+        end
+      end
+    }.instance_eval{
+      htmlify(YARD::Registry.at('#a').docstring)
+    }
+  end
+
+  expect 'The value of $VERBOSE.' do
+    YARD::Registry.clear
+    YARD::Parser::SourceParser.parse_string(<<EOS)
+# The value of $VERBOSE.
+def a(verbose)
+end
+EOS
+    Module.new{
+      class << self
+        include YARD::Templates::Helpers::HtmlHelper
+        def options
+          YARD::Templates::TemplateOptions.new{ |o|
+            o.reset_defaults
+          }
+        end
+        def object
+          YARD::Registry.at('#a')
+        end
+      end
+    }.instance_eval{
+      htmlify(YARD::Registry.at('#a').docstring)
+    }
+  end
+
+  expect 'Yields the <em class="parameter">exception</em>.' do
+    YARD::Registry.clear
+    YARD::Parser::SourceParser.parse_string(<<EOS)
+# Yields the EXCEPTION.
+# @yieldparam [Exception] exception
+def a
+end
+EOS
+    Module.new{
+      class << self
+        include YARD::Templates::Helpers::HtmlHelper
+        def options
+          YARD::Templates::TemplateOptions.new{ |o|
+            o.reset_defaults
+          }
+        end
+        def object
+          YARD::Registry.at('#a')
+        end
+      end
+    }.instance_eval{
+      htmlify(YARD::Registry.at('#a').docstring)
+    }
+  end
 end
