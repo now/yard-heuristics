@@ -1,4 +1,177 @@
                                   YARD-Heuristics
 
   YARD-Heuristics heuristically determines types of parameters and return
-  values to YARD.
+  values for YARD documentation that doesn’t explicitly document it.  This
+  allows you to write documentation that isn’t adorned with “obvious” types,
+  but still get that information into the output.  It also lets you
+  nice-looking references to parameters and have them be marked up
+  appropriately in HTML output.
+
+§ Heuristics
+
+    The following sections list the various heuristics that YARD-Heuristics
+    apply for determining types of parameters and return values.
+
+    Note that for all heuristics, a type will only be added if none already
+    exists.
+
+  § Parameter Named “other”
+
+      A parameter named “other” has the same type as the receiver.  This turns
+
+        class Point
+          def ==(other)
+
+      into
+
+        class Point
+          # @param [Point] other
+          def ==(other)
+
+  § Parameter Types Derived by Parameter Name
+
+      Parameters to a method with names in the following table has the type
+      listed on the same row.
+
+    | Name   | Type      |
+    |--------+-----------|
+    | index  | [Integer] |
+    | object | [Object]  |
+    | range  | [Range]   |
+    | string | [String]  |
+
+      Thus
+
+        class Point
+          def x_inside?(range)
+
+      becomes
+
+        class Point
+          # @param [Range] range
+          def x_inside?(range)
+
+  § Block Parameters
+
+      If the last parameter to a method’s name begins with ‘&’ it has the type
+      [Proc].
+
+        class Method
+          def initialize(&block)
+
+      becomes
+
+        class Method
+          # @param [Block] block
+          def initialize(&block)
+
+  § Return Types by Method Name
+
+      For the return type of a method with less than two ‹@return› tags, the
+      method name is lookup up in the following table and has the type listed on
+      the same row. For the “type” “self or type”, if a ‹@param› tag exists with
+      the name “other”, the type of the receiver is used, otherwise “self” is
+      used.  For the “type” “type”, the type of the receiver is used.
+
+    | Name            | Type           |
+    |-----------------+----------------|
+    | ‹<<›            | self or type   |
+    | ‹>>›            | self or type   |
+    | ‹==›            | [Boolean]      |
+    | ‹===›           | [Boolean]      |
+    | ‹=~›            | [Boolean]      |
+    | ‹<=>›           | [Integer, nil] |
+    | ‹+›             | type           |
+    | ‹-›             | type           |
+    | ‹*›             | type           |
+    | ‹/›             | type           |
+    | each            | [self]         |
+    | each_with_index | [self]         |
+    | hash            | [Integer]      |
+    | inspect         | [String]       |
+    | length          | [Integer]      |
+    | size            | [Integer]      |
+    | to_s            | [String]       |
+    | to_str          | [String]       |
+
+
+      Thus
+
+        class Point
+          def <<(other)
+
+      becomes
+
+        class Point
+          # @return [Point]
+          def <<(other)
+
+      but
+
+        class List
+          def <<(item)
+
+      becomes
+
+        class List
+          # @return [self]
+          def <<(item)
+
+§ Emphasizing Parameter Names
+
+    When producing HTML output, any words in all uppercase, with a possible
+    “th” suffix, that is also the name of a parameter, an ‹@option›, or a
+    ‹@yieldparam›, will be downcased and emphasized with a class of
+    “parameter”.
+
+    In the following example, “OTHER” will be turned into
+    ‹<em class="parameter">other</em>›:
+
+      class Point
+        # @return True if the receiver’s class and {#x} and {#y} `#==` those of
+        #   OTHER
+        def ==(other)
+
+§ Usage
+
+    Add ‹--plugin yard-heuristics-1.0› to your YARD command line.  If you’re
+    using Inventory-Rake-Tasks-YARD¹, add the following to your Rakefile:
+
+      Inventory::Rake::Tasks::YARD.new do |t|
+        t.options += %w'--plugin yard-heuristics-1.0'
+      end
+
+¹ See http://disu.se/software/inventory-rake-tasks-yard/
+
+§ API
+
+    There’s really not very much to the YARD-Heuristics API.  What you can do
+    is add (or modify) the types of parameters and return types of methods by
+    adding (or modifying) entries in the Hash tables
+    ‹YARDHeuristics::ParamTypes› and ‹YARDHeuristics::ReturnTypes›
+    respectively.  That’s about it.
+
+§ Financing
+
+    Currently, most of my time is spent at my day job and in my rather busy
+    private life.  Please motivate me to spend time on this piece of software
+    by donating some of your money to this project.  Yeah, I realize that
+    requesting money to develop software is a bit, well, capitalistic of me.
+    But please realize that I live in a capitalistic society and I need money
+    to have other people give me the things that I need to continue living
+    under the rules of said society.  So, if you feel that this piece of
+    software has helped you out enough to warrant a reward, please PayPal a
+    donation to now@disu.se¹.  Thanks!  Your support won’t go unnoticed!
+
+¹ Send a donation:
+  https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=now%40disu%2ese&item_name=Nikolai%20Weibull%20Software%20Services
+
+§ Reporting Bugs
+
+    Please report any bugs that you encounter to the {issue tracker}¹.
+
+  ¹ See https://github.com/now/yard-heuristics/issues
+
+§ Authors
+
+    Nikolai Weibull wrote the code, the tests, and this README.
