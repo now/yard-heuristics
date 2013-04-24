@@ -2,7 +2,7 @@
 
 # Namespace for YARD-Heuristics.
 module YARDHeuristics
-  load File.expand_path('../yard-heuristics/version.rb', __FILE__)
+  load File.expand_path('../yard-heuristics-1.0/version.rb', __FILE__)
   Version.load
 
   ParamTypes = {
