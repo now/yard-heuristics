@@ -111,8 +111,11 @@ module YARD::Templates::Helpers::HtmlHelper
       else
         parameter = $1.downcase
         ((object.parameters.assoc(parameter) ||
+          object.parameters.assoc(parameter + ':') ||
           object.parameters.assoc('*' + parameter) ||
+          object.parameters.assoc('**' + parameter) ||
           object.parameters.assoc('&' + parameter) ||
+          object.tags.find{ |e| e.tag_name == 'option' and e.pair.name == ':' + parameter } ||
           object.tags.find{ |e| e.tag_name == 'yieldparam' and e.name == parameter }) ?
          '<em class="parameter">%s</em>' % parameter :
          $1) + $2.to_s

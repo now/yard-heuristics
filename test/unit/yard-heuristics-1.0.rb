@@ -217,4 +217,29 @@ EOS
       htmlify(YARD::Registry.at('#a').docstring)
     }
   end
+
+  expect 'Yields the <em class="parameter">exception</em>.' do
+    YARD::Registry.clear
+    YARD::Parser::SourceParser.parse_string(<<EOS)
+# Yields the EXCEPTION.
+# @option options [Exception] :exception
+def a(options = {})
+end
+EOS
+    Module.new{
+      class << self
+        include YARD::Templates::Helpers::HtmlHelper
+        def options
+          YARD::Templates::TemplateOptions.new{ |o|
+            o.reset_defaults
+          }
+        end
+        def object
+          YARD::Registry.at('#a')
+        end
+      end
+    }.instance_eval{
+      htmlify(YARD::Registry.at('#a').docstring)
+    }
+  end
 end
