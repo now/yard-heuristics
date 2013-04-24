@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Namespace for YARD heuristics.
+# Namespace for YARD-Heuristics.
 module YARDHeuristics
   load File.expand_path('../yard-heuristics/version.rb', __FILE__)
   Version.load
