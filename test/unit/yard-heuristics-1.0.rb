@@ -108,6 +108,7 @@ EOS
     YARD::Registry.at('#a').docstring.tags(:param).last.types
   end
 
+=begin Disabled due to bug in YARD
   expect [%w'self'] do
     YARD::Registry.clear
     YARD::Parser::SourceParser.parse_string(<<EOS)
@@ -120,6 +121,7 @@ end
 EOS
   YARD::Registry.at('#<<').docstring.tags(:return).map{ |e| e.types }
   end
+=end
 
   expect 'Emphasizes <em class="parameter">parameter</em>.' do
     YARD::Registry.clear
