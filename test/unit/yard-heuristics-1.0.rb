@@ -171,6 +171,30 @@ EOS
     }
   end
 
+  expect 'The <em class="parameter">a_b</em> parameter.' do
+    YARD::Registry.clear
+    YARD::Parser::SourceParser.parse_string(<<EOS)
+# The A_B parameter.
+def a(a_b)
+end
+EOS
+    Module.new{
+      class << self
+        include YARD::Templates::Helpers::HtmlHelper
+        def options
+          YARD::Templates::TemplateOptions.new{ |o|
+            o.reset_defaults
+          }
+        end
+        def object
+          YARD::Registry.at('#a')
+        end
+      end
+    }.instance_eval{
+      htmlify(YARD::Registry.at('#a').docstring)
+    }
+  end
+
   expect 'The value of $VERBOSE.' do
     YARD::Registry.clear
     YARD::Parser::SourceParser.parse_string(<<EOS)

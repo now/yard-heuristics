@@ -105,7 +105,7 @@ end
 module YARD::Templates::Helpers::HtmlHelper
   alias yardheuristics_saved_htmlify htmlify
   def htmlify(text, markup = options.markup)
-    yardheuristics_saved_htmlify(text, markup).gsub(/\b([[:upper:]]+)(th)?\b/){
+    yardheuristics_saved_htmlify(text, markup).gsub(/\b([[:upper:]_]+)(th)?\b/){
       if $`.end_with?('$') or not YARD::CodeObjects::MethodObject === object
         $&
       else
