@@ -8,7 +8,7 @@ module YARDHeuristics
       author 'Nikolai Weibull', 'now@disu.se'
     }
 
-    homepage 'http://disu.se/software/yard-heuristics/'
+    homepage 'http://disu.se/software/yard-heuristics-1.0/'
 
     licenses{
       license 'LGPLv3+',
