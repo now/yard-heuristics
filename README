@@ -141,7 +141,7 @@
         t.options += %w'--plugin yard-heuristics-1.0'
       end
 
-¹ See http://disu.se/software/inventory-rake-tasks-yard/
+¹ See http://disu.se/software/inventory-rake-tasks-yard-1.0/
 
 § API
 
